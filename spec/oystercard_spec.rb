@@ -28,11 +28,13 @@ describe Oystercard do
     it { is_expected.not_to be_in_journey }
 
     it 'is in journey after touching in' do
+      subject.top_up Oystercard::MIN_BALANCE
       subject.touch_in
       expect(subject).to be_in_journey
     end
 
     it 'is not in journey after touching in then out' do
+      subject.top_up Oystercard::MIN_BALANCE
       subject.touch_in
       subject.touch_out
       expect(subject).not_to be_in_journey
@@ -41,6 +43,13 @@ describe Oystercard do
 
   describe '#touch_in' do
     it { is_expected.to respond_to(:touch_in) }
+
+    it 'refuses to touch in below minimum balance' do
+      min_balance = Oystercard::MIN_BALANCE
+      subject.top_up min_balance
+      subject.deduct 1
+      expect { subject.touch_in }.to raise_error "Below min balance of #{min_balance}"
+    end
   end
 
   describe '#touch_out' do
