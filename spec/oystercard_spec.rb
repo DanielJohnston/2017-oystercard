@@ -1,6 +1,8 @@
 require 'oystercard'
 
 describe Oystercard do
+  let(:station){ double :station }
+
   it 'has a balance of zero' do
     expect(subject.balance).to eq 0
   end
@@ -20,13 +22,13 @@ describe Oystercard do
 
     it 'is in journey after touching in' do
       subject.top_up Oystercard::MIN_BALANCE
-      subject.touch_in
+      subject.touch_in(station)
       expect(subject).to be_in_journey
     end
 
     it 'is not in journey after touching in then out' do
       subject.top_up Oystercard::MIN_BALANCE
-      subject.touch_in
+      subject.touch_in(station)
       subject.touch_out
       expect(subject).not_to be_in_journey
     end
@@ -38,7 +40,7 @@ describe Oystercard do
     it 'refuses to touch in below minimum balance' do
       min_balance = Oystercard::MIN_BALANCE
       subject.top_up min_balance - 1
-      expect { subject.touch_in }.to raise_error "Below min balance of #{min_balance}"
+      expect { subject.touch_in(station) }.to raise_error "Below min balance of #{min_balance}"
     end
   end
 
@@ -48,8 +50,26 @@ describe Oystercard do
     it 'deducts the minimum charge when touching out' do
       min_balance = Oystercard::MIN_BALANCE
       subject.top_up min_balance
-      subject.touch_in
+      subject.touch_in(station)
       expect{ subject.touch_out }.to change{ subject.balance }.by -min_balance
+    end
+  end
+
+  describe '#entry_station' do
+
+    it 'stores the entry station' do
+      min_balance = Oystercard::MIN_BALANCE
+      subject.top_up min_balance
+      subject.touch_in(station)
+      expect(subject.entry_station).to eq station
+    end
+
+    it 'removes the entry station after touching out' do
+      min_balance = Oystercard::MIN_BALANCE
+      subject.top_up min_balance
+      subject.touch_in(station)
+      subject.touch_out
+      expect(subject.entry_station).to eq nil
     end
   end
 end
